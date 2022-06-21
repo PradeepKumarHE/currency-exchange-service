@@ -1,6 +1,6 @@
 package com.pradeep.microservice;
 
-import java.math.BigDecimal;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
@@ -14,8 +14,17 @@ public class CurrencyExchangeController {
 	@Autowired	
 	private Environment	environment;
 	
+	@Autowired
+	private CurrencyExchangeRepository currencyExchangeRepository;
+	
 	@GetMapping("/currency-exchange/from/{from}/to/{to}")
 	public CurrecnyExchange retrieveExchangeValue(@PathVariable("from") String from,@PathVariable("to") String to) {
-		return new CurrecnyExchange(1000l,from,to,BigDecimal.valueOf(50),environment.getProperty("local.server.port"));
+		Optional<CurrecnyExchange> optionalCurrecnyExchange=currencyExchangeRepository.findByFromAndTo(from, to);
+		if(optionalCurrecnyExchange.isEmpty()) {
+			throw new RuntimeException("Unable to find data for "+from+" to "+to);
+		}
+		CurrecnyExchange currecnyExchange=optionalCurrecnyExchange.get();
+		currecnyExchange.setApplicationPortNumber(environment.getProperty("local.server.port"));
+		return currecnyExchange;
 	}
 }
